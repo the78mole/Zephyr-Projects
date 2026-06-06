@@ -1,0 +1,81 @@
+/*
+ * Board-Overlay für ESP32-S3-DevKitC v1.0 / Klon (procpu)
+ *
+ * Konfiguriert die onboard-adressierbare RGB-LED (WS2812, GPIO48) als
+ * LED-Strip via SPI3.
+ *
+ * Hintergrund: Im Standard-DevKitC-Pinctrl ist GPIO38 als SPI3_CSEL belegt.
+ * Wir überschreiben group1 ohne CSEL und setzen MOSI auf GPIO48
+ * (original DevKitC v1.0 / viele Klone verwenden GPIO48 statt GPIO38).
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/dt-bindings/led/led.h>
+
+/* -----------------------------------------------------------------------
+ * spim3_default komplett neu definieren:
+ *   group1: MISO=GPIO37, SCLK=GPIO36 (kein CSEL)
+ *   group2: MOSI=GPIO48 (Datenleitung zur WS2812-LED)
+ * ----------------------------------------------------------------------- */
+&pinctrl {
+	spim3_default: spim3_default {
+		group1 {
+			pinmux = <SPIM3_MISO_GPIO37>,
+				 <SPIM3_SCLK_GPIO36>;
+		};
+		group2 {
+			pinmux = <SPIM3_MOSI_GPIO48>;
+			output-low;
+		};
+	};
+};
+
+/* -----------------------------------------------------------------------
+ * SPI3 mit WS2812-Treiber
+ * ----------------------------------------------------------------------- */
+&spi3 {
+
+	/*
+	 * line-idle-low: Sicherstellt, dass MOSI im Leerlauf LOW bleibt
+	 * (WS2812-Protokollanforderung).
+	 */
+	line-idle-low;
+
+	status = "okay";
+
+	led_strip: ws2812@0 {
+		compatible = "worldsemi,ws2812-spi";
+
+		/* SPI-Pflichtfelder (reg wird vom Treiber ignoriert) */
+		reg = <0>;
+		spi-max-frequency = <6400000>;
+
+		/* WS2812-Protokoll: 1 LED in der Kette */
+		chain-length = <1>;
+		spi-cpha;
+
+		/*
+		 * Bitkodierung via SPI-Byte:
+		 *   0-Bit: 0xC0 = 11000000 → ~313 ns HIGH, ~938 ns LOW
+		 *   1-Bit: 0xF0 = 11110000 → ~625 ns HIGH, ~625 ns LOW
+		 * Passt zu WS2812-Timing bei spi-max-frequency = 6,4 MHz.
+		 */
+		spi-one-frame  = <0xf0>;
+		spi-zero-frame = <0xc0>;
+
+		/* WS2812 verwendet intern GRB-Reihenfolge */
+		color-mapping = <LED_COLOR_ID_GREEN
+				 LED_COLOR_ID_RED
+				 LED_COLOR_ID_BLUE>;
+	};
+};
+
+/* -----------------------------------------------------------------------
+ * Alias, damit main.c den Strip per DT_ALIAS(led_strip) findet
+ * ----------------------------------------------------------------------- */
+/ {
+	aliases {
+		led-strip = &led_strip;
+	};
+};

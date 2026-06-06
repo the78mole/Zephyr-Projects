@@ -1,0 +1,11 @@
+# West-verwaltete Repositories (werden durch 'west update' befüllt)
+zephyr/
+modules/
+bootloader/
+tools/
+
+# West-Konfiguration (maschinenspezifisch)
+.west/
+
+# Build-Artefakte
+build/

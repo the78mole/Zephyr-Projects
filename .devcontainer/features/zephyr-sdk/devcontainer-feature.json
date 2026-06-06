@@ -1,0 +1,21 @@
+{
+  "id": "zephyr-sdk",
+  "version": "1.0.0",
+  "name": "Zephyr SDK",
+  "description": "Lädt das Zephyr SDK herunter und installiert die gewünschten Toolchains. Läuft während 'docker build', sodass der Docker-Layer-Cache einen erneuten Download verhindert.",
+  "options": {
+    "sdkVersion": {
+      "type": "string",
+      "default": "0.16.8",
+      "description": "Zephyr SDK Version (siehe https://github.com/zephyrproject-rtos/sdk-ng/releases)"
+    },
+    "toolchains": {
+      "type": "string",
+      "default": "xtensa-espressif_esp32_zephyr-elf,xtensa-espressif_esp32s2_zephyr-elf,xtensa-espressif_esp32s3_zephyr-elf,riscv64-zephyr-elf,arm-zephyr-eabi",
+      "description": "Kommagetrennte Liste der zu installierenden Toolchains"
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/the78mole/features/common-utils"
+  ]
+}

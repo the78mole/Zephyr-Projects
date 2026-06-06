@@ -1,0 +1,127 @@
+{
+  "name": "ESP32-Zephyr-Test",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+
+  "features": {
+    "ghcr.io/the78mole/features/common-utils:2": {
+      "username": "vscode",
+      "userUid": "automatic",
+      "userGid": "automatic",
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "ohMyZshTheme": "fino",
+      "installOhMyZsh": true,
+      "addGroups": "plugdev,dialout"
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+
+    // Lokales Feature: Zephyr SDK wird in den Docker-Image-Layer gebacken
+    // → Docker-Layer-Cache verhindert erneuten Download bei unveränderter Konfiguration
+    "./features/zephyr-sdk": {
+      "sdkVersion": "0.16.8",
+      "toolchains": "xtensa-espressif_esp32_zephyr-elf,xtensa-espressif_esp32s2_zephyr-elf,xtensa-espressif_esp32s3_zephyr-elf,riscv64-zephyr-elf,arm-zephyr-eabi"
+    }
+  },
+
+  // --privileged ermöglicht Zugriff auf USB-Geräte und /dev
+  "runArgs": ["--privileged"],
+
+  // /dev live bind-mounten, damit neu eingesteckte USB-Geräte (z.B. ESP32) im
+  // Container erscheinen
+  "mounts": [
+    {
+      "source": "/dev",
+      "target": "/dev",
+      "type": "bind"
+    }
+  ],
+
+  // West-Workspace im Projektverzeichnis initialisieren und Module laden.
+  // Läuft nach jedem Container-Start (nutzt west-Cache, falls Repos bereits vorhanden).
+  // West-Workspace-Konfiguration direkt im Projektverzeichnis (.west/config).
+  // 'west init -l .' würde .west/ im Elternverzeichnis anlegen – daher wird
+  // .west/config manuell erstellt und nur 'west update' aufgerufen.
+  "postCreateCommand": "mkdir -p /workspaces/ESP32-Zephyr-Test/.west && printf '[manifest]\npath = .\nfile = west.yml\n\n[zephyr]\nbase = zephyr\n' > /workspaces/ESP32-Zephyr-Test/.west/config && cd /workspaces/ESP32-Zephyr-Test && west update && west blobs fetch hal_espressif",
+
+  "remoteUser": "vscode",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cpptools-extension-pack",
+        "ms-vscode.cmake-tools",
+        "marus25.cortex-debug",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "cmake.configureOnOpen": false,
+        "workbench.colorCustomizations": {
+          // Titelleiste
+          "titleBar.activeBackground":   "#2d3136",
+          "titleBar.activeForeground":   "#b1e4fa",
+          "titleBar.inactiveBackground": "#1e2226",
+          "titleBar.inactiveForeground": "#7098b8",
+          "titleBar.border":             "#c0504a",
+
+          // Statusleiste
+          "statusBar.background":              "#c0504a",
+          "statusBar.foreground":              "#ffffff",
+          "statusBar.debuggingBackground":     "#0070c5",
+          "statusBar.debuggingForeground":     "#ffffff",
+          "statusBar.noFolderBackground":      "#8c2b2b",
+          "statusBar.border":                  "#d47070",
+
+          // Activity Bar (linke Icon-Leiste)
+          "activityBar.background":            "#2d3136",
+          "activityBar.foreground":            "#b1e4fa",
+          "activityBar.inactiveForeground":    "#7098b8",
+          "activityBar.activeBorder":          "#c0504a",
+          "activityBar.activeBackground":      "#3d4248",
+          "activityBar.border":                "#1e2226",
+          "activityBarBadge.background":       "#00aeff",
+          "activityBarBadge.foreground":       "#ffffff",
+
+          // Side Bar
+          "sideBar.background":                "#252930",
+          "sideBar.foreground":                "#c8d8e8",
+          "sideBar.border":                    "#1e2226",
+          "sideBarTitle.foreground":           "#b1e4fa",
+          "sideBarSectionHeader.background":   "#2d3136",
+          "sideBarSectionHeader.foreground":  "#d47070",
+          "sideBarSectionHeader.border":       "#3d4248",
+
+          // Tabs
+          "tab.activeBackground":              "#2d3136",
+          "tab.activeForeground":              "#b1e4fa",
+          "tab.activeBorderTop":               "#c0504a",
+          "tab.inactiveBackground":            "#1e2226",
+          "tab.inactiveForeground":            "#7098b8",
+          "tab.border":                        "#1e2226",
+          "tab.hoverBackground":               "#3d4248",
+          "editorGroupHeader.tabsBackground":  "#1e2226",
+          "editorGroupHeader.tabsBorder":      "#1e2226",
+
+          // Panel (Terminal, Probleme, …)
+          "panel.background":                  "#1e2226",
+          "panel.border":                      "#c0504a",
+          "panelTitle.activeForeground":       "#b1e4fa",
+          "panelTitle.activeBorder":           "#c0504a",
+          "panelTitle.inactiveForeground":     "#7098b8",
+
+          // Badges & Highlights
+          "badge.background":                  "#0070c5",
+          "badge.foreground":                  "#ffffff",
+          "focusBorder":                       "#c0504a",
+          "selection.background":              "#c0504a40"
+        }
+      }
+    }
+  }
+}
