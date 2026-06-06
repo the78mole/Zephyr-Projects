@@ -20,6 +20,7 @@ PORT    ?= $(shell bash scripts/list-serial.sh --auto 2>/dev/null || echo /dev/t
 # Verzeichnisname anhand des Präfixes ermitteln
 dir-010 := 010-blinky
 dir-100 := 100-US-Ranging
+dir-200 := 200-BThome-Ranging
 
 MONITOR_CMD  = python3 scripts/monitor.py $(PORT) 115200
 RESET_CMD    = python3 -m esptool --port $(PORT) run
@@ -65,6 +66,26 @@ monitor-rst-100:
 	$(MONITOR_CMD)
 
 # ----------------------------------------------------------------------------
+# 200-BThome-Ranging
+# ----------------------------------------------------------------------------
+.PHONY: build-200
+build-200:
+	west build -b $(BOARD) $(dir-200)
+
+.PHONY: flash-200
+flash-200:
+	west flash --esp-device $(PORT)
+
+.PHONY: monitor-200
+monitor-200:
+	$(MONITOR_CMD)
+
+.PHONY: monitor-rst-200
+monitor-rst-200:
+	$(RESET_CMD)
+	$(MONITOR_CMD)
+
+# ----------------------------------------------------------------------------
 # Hilfsziele
 # ----------------------------------------------------------------------------
 .PHONY: help
@@ -92,6 +113,12 @@ help:
 	@echo "    make flash-100          [PORT=…]"
 	@echo "    make monitor-100        [PORT=…]"
 	@echo "    make monitor-rst-100    [PORT=…]  – Reset + Monitor"
+	@echo ""
+	@echo "  200-BThome-Ranging  (HC-SR04 + BThome V2 BLE, Distanz in mm):"
+	@echo "    make build-200"
+	@echo "    make flash-200          [PORT=…]"
+	@echo "    make monitor-200        [PORT=…]"
+	@echo "    make monitor-rst-200    [PORT=…]  – Reset + Monitor"
 	@echo ""
 
 .PHONY: list-ports
